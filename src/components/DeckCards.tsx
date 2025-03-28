@@ -1,13 +1,16 @@
 
 import React from "react";
 import { Flashcard } from "@/types";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Upload } from "lucide-react";
+import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
+import ImportCardsDialog from "./ImportCardsDialog";
 
 interface DeckCardsProps {
   cards: Flashcard[];
+  deckId: string;
 }
 
-const DeckCards: React.FC<DeckCardsProps> = ({ cards }) => {
+const DeckCards: React.FC<DeckCardsProps> = ({ cards, deckId }) => {
   return (
     <div className="px-4 py-6">
       <div className="flex justify-between items-center mb-4">
@@ -35,27 +38,53 @@ const DeckCards: React.FC<DeckCardsProps> = ({ cards }) => {
       
       {/* Card list */}
       <div className="space-y-4">
-        {cards.map((card) => (
-          <div
-            key={card.id}
-            className="bg-white rounded-lg border border-gray-200 p-4"
-          >
-            <div className="flex justify-between">
-              <h3 className="text-xl font-medium">{card.front}</h3>
-              <button>
-                <MoreVertical size={20} />
-              </button>
+        {cards.length > 0 ? (
+          cards.map((card) => (
+            <div
+              key={card.id}
+              className="bg-white rounded-lg border border-gray-200 p-4"
+            >
+              <div className="flex justify-between">
+                <h3 className="text-xl font-medium">{card.front}</h3>
+                <button>
+                  <MoreVertical size={20} />
+                </button>
+              </div>
+              <p className="text-right mt-2 text-gray-600 rtl">{card.back}</p>
             </div>
-            <p className="text-right mt-2 text-gray-600 rtl">{card.back}</p>
+          ))
+        ) : (
+          <div className="text-center py-10">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="4" y="4" width="16" height="16" rx="2" />
+                  <path d="M10 4v16" />
+                </svg>
+              </div>
+            </div>
+            <h3 className="text-xl font-medium text-gray-500 mb-8">This deck has no cards</h3>
           </div>
-        ))}
+        )}
       </div>
       
-      {/* Add card button */}
-      <div className="mt-6">
+      {/* Action buttons */}
+      <div className="mt-6 space-y-4">
         <button className="w-full py-4 bg-gray-800 text-white rounded-lg font-medium">
           Add cards
         </button>
+        
+        <Dialog>
+          <DialogTrigger asChild>
+            <button className="w-full py-4 border border-gray-400 rounded-lg font-medium flex items-center justify-center">
+              <Upload className="mr-2" size={20} />
+              Import cards
+            </button>
+          </DialogTrigger>
+          <DialogContent className="p-0 max-w-md">
+            <ImportCardsDialog deckId={deckId} />
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

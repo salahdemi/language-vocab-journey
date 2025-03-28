@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { Deck, Flashcard, StudySession } from "@/types";
 
@@ -45,8 +44,9 @@ interface VocabContextType {
   cards: Flashcard[];
   studySession: StudySession | null;
   currentDeck: Deck | null;
-  addDeck: (deck: Omit<Deck, "id" | "cardsForToday" | "studiedToday" | "toReview">) => void;
+  addDeck: (deck: Omit<Deck, "id" | "cardsForToday" | "studiedToday" | "toReview">) => string;
   addCard: (card: Omit<Flashcard, "id">) => void;
+  importCardsFromCSV: (deckId: string, csvData: string) => void;
   startStudySession: (deckId: string) => void;
   endStudySession: () => void;
   nextCard: () => void;
@@ -72,14 +72,16 @@ export const VocabProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Function to add a new deck
   const addDeck = (deck: Omit<Deck, "id" | "cardsForToday" | "studiedToday" | "toReview">) => {
+    const newId = Date.now().toString();
     const newDeck: Deck = {
       ...deck,
-      id: Date.now().toString(),
+      id: newId,
       cardsForToday: 0,
       studiedToday: 0,
       toReview: 0
     };
     setDecks([...decks, newDeck]);
+    return newId;
   };
 
   // Function to add a new card
@@ -97,6 +99,37 @@ export const VocabProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
       return deck;
     }));
+  };
+
+  // Function to import cards from CSV
+  const importCardsFromCSV = (deckId: string, csvData: string) => {
+    try {
+      // Parse CSV data (simple implementation, can be improved)
+      const lines = csvData.split('\n');
+      const newCards: Omit<Flashcard, "id">[] = [];
+      
+      lines.forEach(line => {
+        if (line.trim()) {
+          const [front, back] = line.split(',').map(item => item.trim());
+          if (front && back) {
+            newCards.push({
+              front,
+              back,
+              deckId,
+              language: getDeck(deckId)?.language || "Default"
+            });
+          }
+        }
+      });
+      
+      // Add all cards
+      newCards.forEach(card => addCard(card));
+      
+      return newCards.length;
+    } catch (error) {
+      console.error("Error importing CSV:", error);
+      return 0;
+    }
   };
 
   // Function to get a deck by ID
@@ -223,6 +256,7 @@ export const VocabProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     currentDeck,
     addDeck,
     addCard,
+    importCardsFromCSV,
     startStudySession,
     endStudySession,
     nextCard,

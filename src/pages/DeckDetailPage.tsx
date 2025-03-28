@@ -28,7 +28,7 @@ const DeckDetailPage: React.FC = () => {
     <div className="pb-16 min-h-screen bg-white">
       <DeckHeader deck={deck} />
       <StudyStats deck={deck} onStudy={handleStartStudy} />
-      <DeckCards cards={cards} />
+      <DeckCards cards={cards} deckId={deck.id} />
       <Navbar />
     </div>
   );

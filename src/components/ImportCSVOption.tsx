@@ -1,7 +1,9 @@
+
 import React, { useState, useRef } from "react";
 import { useVocab } from "@/context/VocabContext";
 import { ArrowLeft, FileText, Upload, Check } from "lucide-react";
 import { DialogClose } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 interface ImportCSVOptionProps {
   deckId: string;
@@ -40,9 +42,16 @@ const ImportCSVOption: React.FC<ImportCSVOptionProps> = ({ deckId, onBack }) => 
         const text = event.target?.result as string;
         const importedCount = importCardsFromCSV(deckId, text);
         
-        // Ensure we have a number return value
-        setImportCount(importedCount || 0);
+        // Set import count and show success state
+        setImportCount(importedCount);
         setImported(true);
+        
+        // Show toast notification
+        if (importedCount > 0) {
+          toast.success(`Successfully imported ${importedCount} cards`);
+        } else {
+          toast.error("No cards were imported. Please check your CSV format.");
+        }
       };
       reader.readAsText(file);
     }

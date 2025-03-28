@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { Deck, Flashcard, StudySession } from "@/types";
 
@@ -105,33 +104,31 @@ export const VocabProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Function to import cards from CSV
   const importCardsFromCSV = (deckId: string, csvData: string): number => {
     try {
-      // Parse CSV data (simple implementation, can be improved)
+      // Parse CSV data
       const lines = csvData.split('\n');
-      const newCards: Omit<Flashcard, "id">[] = [];
+      const newCards: Flashcard[] = [];
       
-      lines.forEach(line => {
+      lines.forEach((line, index) => {
         if (line.trim()) {
           const [front, back] = line.split(',').map(item => item.trim());
           if (front && back) {
-            newCards.push({
+            // Create a new card with a unique ID
+            const newCard: Flashcard = {
               front,
               back,
               deckId,
-              language: getDeck(deckId)?.language || "Default"
-            });
+              language: getDeck(deckId)?.language || "Default",
+              id: `${Date.now()}-${index}-${Math.random().toString(36).substring(2, 9)}`
+            };
+            newCards.push(newCard);
           }
         }
       });
       
       // Add all cards at once
       if (newCards.length > 0) {
-        newCards.forEach(card => {
-          const newCard: Flashcard = {
-            ...card,
-            id: Date.now().toString() + Math.random().toString(36).substring(2, 9) // Ensure unique IDs
-          };
-          setCards(prevCards => [...prevCards, newCard]);
-        });
+        // Update cards state with all new cards
+        setCards(prevCards => [...prevCards, ...newCards]);
         
         // Update deck total cards
         setDecks(decks.map(deck => {

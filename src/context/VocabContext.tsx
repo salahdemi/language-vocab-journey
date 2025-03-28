@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { Deck, Flashcard, StudySession } from "@/types";
 
@@ -46,7 +47,7 @@ interface VocabContextType {
   currentDeck: Deck | null;
   addDeck: (deck: Omit<Deck, "id" | "cardsForToday" | "studiedToday" | "toReview">) => string;
   addCard: (card: Omit<Flashcard, "id">) => void;
-  importCardsFromCSV: (deckId: string, csvData: string) => void;
+  importCardsFromCSV: (deckId: string, csvData: string) => number;
   startStudySession: (deckId: string) => void;
   endStudySession: () => void;
   nextCard: () => void;
@@ -102,7 +103,7 @@ export const VocabProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Function to import cards from CSV
-  const importCardsFromCSV = (deckId: string, csvData: string) => {
+  const importCardsFromCSV = (deckId: string, csvData: string): number => {
     try {
       // Parse CSV data (simple implementation, can be improved)
       const lines = csvData.split('\n');
@@ -122,8 +123,24 @@ export const VocabProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
       });
       
-      // Add all cards
-      newCards.forEach(card => addCard(card));
+      // Add all cards at once
+      if (newCards.length > 0) {
+        newCards.forEach(card => {
+          const newCard: Flashcard = {
+            ...card,
+            id: Date.now().toString() + Math.random().toString(36).substring(2, 9) // Ensure unique IDs
+          };
+          setCards(prevCards => [...prevCards, newCard]);
+        });
+        
+        // Update deck total cards
+        setDecks(decks.map(deck => {
+          if (deck.id === deckId) {
+            return { ...deck, totalCards: deck.totalCards + newCards.length };
+          }
+          return deck;
+        }));
+      }
       
       return newCards.length;
     } catch (error) {

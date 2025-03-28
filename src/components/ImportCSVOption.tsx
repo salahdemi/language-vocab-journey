@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { useVocab } from "@/context/VocabContext";
 import { ArrowLeft, FileText, Upload, Check } from "lucide-react";
@@ -39,15 +38,10 @@ const ImportCSVOption: React.FC<ImportCSVOptionProps> = ({ deckId, onBack }) => 
       const reader = new FileReader();
       reader.onload = (event) => {
         const text = event.target?.result as string;
-        const count = importCardsFromCSV(deckId, text);
-        // Fix here: Store the result of importCardsFromCSV in a variable first
-        if (typeof count === 'number') {
-          setImportCount(count);
-        } else {
-          // If the function doesn't return a number, set a default
-          setImportCount(0);
-          console.error("importCardsFromCSV did not return a number");
-        }
+        const importedCount = importCardsFromCSV(deckId, text);
+        
+        // Ensure we have a number return value
+        setImportCount(importedCount || 0);
         setImported(true);
       };
       reader.readAsText(file);

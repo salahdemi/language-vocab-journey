@@ -40,7 +40,14 @@ const ImportCSVOption: React.FC<ImportCSVOptionProps> = ({ deckId, onBack }) => 
       reader.onload = (event) => {
         const text = event.target?.result as string;
         const count = importCardsFromCSV(deckId, text);
-        setImportCount(count);
+        // Fix here: Store the result of importCardsFromCSV in a variable first
+        if (typeof count === 'number') {
+          setImportCount(count);
+        } else {
+          // If the function doesn't return a number, set a default
+          setImportCount(0);
+          console.error("importCardsFromCSV did not return a number");
+        }
         setImported(true);
       };
       reader.readAsText(file);

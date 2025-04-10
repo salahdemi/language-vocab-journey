@@ -10,31 +10,43 @@ const StudyPage: React.FC = () => {
   const { studySession, currentDeck } = useVocab();
   const { toast } = useToast();
 
-  // If there's no active study session, redirect to home
+  // Always call hooks at the top level
   React.useEffect(() => {
+    // If there's no active study session or current deck, redirect to home
     if (!studySession || !currentDeck) {
       navigate("/");
     }
   }, [studySession, currentDeck, navigate]);
 
-  // Add a safety check to ensure we have valid data before rendering
-  if (!studySession || !currentDeck || !studySession.cardsToStudy || studySession.cardsToStudy.length === 0) {
-    // Show toast and redirect if no cards to study
-    React.useEffect(() => {
+  // Check if there are no cards to study - show toast and redirect
+  React.useEffect(() => {
+    if (studySession && currentDeck && (!studySession.cardsToStudy || studySession.cardsToStudy.length === 0)) {
       toast({
         title: "No Cards to Study",
         description: "There are no cards due for review at this time",
         variant: "destructive",
       });
       navigate(`/deck/${currentDeck?.id || ""}`);
-    }, []);
+    }
+  }, [studySession, currentDeck, toast, navigate]);
+
+  // Check if we've gone past the last card
+  React.useEffect(() => {
+    if (studySession && currentDeck && studySession.currentCardIndex >= studySession.cardsToStudy.length) {
+      navigate(`/deck/${currentDeck.id}`);
+    }
+  }, [studySession, currentDeck, navigate]);
+
+  // Render conditions - return null early if we don't have valid data
+  if (!studySession || !currentDeck) {
     return null;
   }
 
-  // Add a guard to ensure the current card index is valid
+  if (!studySession.cardsToStudy || studySession.cardsToStudy.length === 0) {
+    return null;
+  }
+
   if (studySession.currentCardIndex >= studySession.cardsToStudy.length) {
-    // If we've gone past the last card, return to the deck page
-    navigate(`/deck/${currentDeck.id}`);
     return null;
   }
 
@@ -42,7 +54,6 @@ const StudyPage: React.FC = () => {
   
   // Ensure current card exists before continuing
   if (!currentCard) {
-    navigate(`/deck/${currentDeck.id}`);
     return null;
   }
   

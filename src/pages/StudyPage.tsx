@@ -48,11 +48,11 @@ const StudyPage: React.FC = () => {
         // Check for any cards that are now due
         getNextDueCard(currentDeck.id);
         
-        // Also check if the current card is due for review
+        // Only check if the card is due when the answer has been shown
         if (studySession.cardsToStudy.length > 0 && 
             studySession.currentCardIndex < studySession.cardsToStudy.length) {
           const card = studySession.cardsToStudy[studySession.currentCardIndex];
-          if (card.nextReview && new Date(card.nextReview) <= new Date()) {
+          if (card.nextReview && new Date(card.nextReview) <= new Date() && studySession.answerShown) {
             setShowRepeatButton(true);
           }
         }
@@ -89,15 +89,12 @@ const StudyPage: React.FC = () => {
   const handleRepeatNow = () => {
     setShowRepeatButton(false);
     // Reset the card to be reviewed again
-    toast({
-      title: "Card Ready",
-      description: "Let's test your memory now!",
-    });
+    // No toast notification here as requested
   };
 
   return (
     <div className="min-h-screen bg-white">
-      {showRepeatButton && currentCard.nextReview && new Date(currentCard.nextReview) <= new Date() && (
+      {showRepeatButton && currentCard.nextReview && new Date(currentCard.nextReview) <= new Date() && studySession.answerShown && (
         <div className="fixed top-0 left-0 right-0 bg-green-100 p-4 flex justify-center items-center z-10">
           <Button 
             onClick={handleRepeatNow}

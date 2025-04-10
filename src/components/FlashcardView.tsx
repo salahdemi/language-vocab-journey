@@ -54,8 +54,8 @@ const FlashcardView: React.FC<FlashcardViewProps> = ({ card, cardNumber, totalCa
       {/* Card Content */}
       <div className="flex-1 flex flex-col justify-center p-6">
         <div className="bg-white rounded-lg shadow-md p-8 min-h-[50vh] flex flex-col">
-          {/* Card review time if set */}
-          {card.nextReview && (
+          {/* Only show card review time if answer is shown */}
+          {answerShown && card.nextReview && (
             <div className="absolute top-2 right-2 text-xs text-gray-500">
               Next review: {new Date(card.nextReview).toLocaleTimeString()}
             </div>

@@ -4,12 +4,15 @@ import { useNavigate } from "react-router-dom";
 import { useVocab } from "@/context/VocabContext";
 import FlashcardView from "@/components/FlashcardView";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Clock } from "lucide-react";
 
 const StudyPage: React.FC = () => {
   const navigate = useNavigate();
   const { studySession, currentDeck, getNextDueCard } = useVocab();
   const { toast } = useToast();
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const [showRepeatButton, setShowRepeatButton] = useState(false);
 
   // Always call hooks at the top level
   useEffect(() => {
@@ -44,6 +47,15 @@ const StudyPage: React.FC = () => {
       if (studySession && currentDeck) {
         // Check for any cards that are now due
         getNextDueCard(currentDeck.id);
+        
+        // Also check if the current card is due for review
+        if (studySession.cardsToStudy.length > 0 && 
+            studySession.currentCardIndex < studySession.cardsToStudy.length) {
+          const card = studySession.cardsToStudy[studySession.currentCardIndex];
+          if (card.nextReview && new Date(card.nextReview) <= new Date()) {
+            setShowRepeatButton(true);
+          }
+        }
       }
     }, 1000);
     
@@ -73,8 +85,29 @@ const StudyPage: React.FC = () => {
   const cardNumber = studySession.currentCardIndex + 1;
   const totalCards = studySession.cardsToStudy.length;
 
+  // Function to handle repeating the card now
+  const handleRepeatNow = () => {
+    setShowRepeatButton(false);
+    // Reset the card to be reviewed again
+    toast({
+      title: "Card Ready",
+      description: "Let's test your memory now!",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-white">
+      {showRepeatButton && currentCard.nextReview && new Date(currentCard.nextReview) <= new Date() && (
+        <div className="fixed top-0 left-0 right-0 bg-green-100 p-4 flex justify-center items-center z-10">
+          <Button 
+            onClick={handleRepeatNow}
+            className="flex items-center gap-2 bg-green-500 hover:bg-green-600"
+          >
+            <Clock size={16} />
+            <span>Review Time! Test Yourself Now</span>
+          </Button>
+        </div>
+      )}
       <FlashcardView 
         card={currentCard} 
         cardNumber={cardNumber} 

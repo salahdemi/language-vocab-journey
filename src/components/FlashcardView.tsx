@@ -14,6 +14,22 @@ interface FlashcardViewProps {
 const FlashcardView: React.FC<FlashcardViewProps> = ({ card, cardNumber, totalCards }) => {
   const { answerShown, showAnswer, saveCardReview } = useVocab();
 
+  // Format the review time for display
+  const formatReviewTime = (difficulty: 'again' | 'hard' | 'good' | 'easy'): string => {
+    switch (difficulty) {
+      case 'again':
+        return '1m';
+      case 'hard':
+        return '8m';
+      case 'good':
+        return '15m';
+      case 'easy':
+        return '4d';
+      default:
+        return '';
+    }
+  };
+
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
@@ -38,6 +54,13 @@ const FlashcardView: React.FC<FlashcardViewProps> = ({ card, cardNumber, totalCa
       {/* Card Content */}
       <div className="flex-1 flex flex-col justify-center p-6">
         <div className="bg-white rounded-lg shadow-md p-8 min-h-[50vh] flex flex-col">
+          {/* Card review time if set */}
+          {card.nextReview && (
+            <div className="absolute top-2 right-2 text-xs text-gray-500">
+              Next review: {new Date(card.nextReview).toLocaleTimeString()}
+            </div>
+          )}
+          
           {/* Front of card */}
           <div className="text-3xl text-center font-medium my-auto py-16">
             {card.front}
@@ -73,28 +96,28 @@ const FlashcardView: React.FC<FlashcardViewProps> = ({ card, cardNumber, totalCa
               className="py-3 px-2 flex flex-col items-center justify-center bg-red-100 text-red-600 rounded-lg"
             >
               <span className="font-medium">Again</span>
-              <span className="text-xs mt-1">1m</span>
+              <span className="text-xs mt-1">{formatReviewTime('again')}</span>
             </button>
             <button
               onClick={() => saveCardReview('hard')}
               className="py-3 px-2 flex flex-col items-center justify-center bg-yellow-100 text-yellow-600 rounded-lg"
             >
               <span className="font-medium">Hard</span>
-              <span className="text-xs mt-1">8m</span>
+              <span className="text-xs mt-1">{formatReviewTime('hard')}</span>
             </button>
             <button
               onClick={() => saveCardReview('good')}
               className="py-3 px-2 flex flex-col items-center justify-center bg-green-100 text-green-600 rounded-lg"
             >
               <span className="font-medium">Good</span>
-              <span className="text-xs mt-1">15m</span>
+              <span className="text-xs mt-1">{formatReviewTime('good')}</span>
             </button>
             <button
               onClick={() => saveCardReview('easy')}
               className="py-3 px-2 flex flex-col items-center justify-center bg-blue-100 text-blue-600 rounded-lg"
             >
               <span className="font-medium">Easy</span>
-              <span className="text-xs mt-1">4d</span>
+              <span className="text-xs mt-1">{formatReviewTime('easy')}</span>
             </button>
           </div>
         )}

@@ -70,28 +70,28 @@ const FlashcardView: React.FC<FlashcardViewProps> = ({ card, cardNumber, totalCa
           <div className="grid grid-cols-4 gap-2">
             <button
               onClick={() => saveCardReview('again')}
-              className="py-3 px-2 flex flex-col items-center justify-center bg-app-red bg-opacity-20 rounded-lg"
+              className="py-3 px-2 flex flex-col items-center justify-center bg-red-100 text-red-600 rounded-lg"
             >
               <span className="font-medium">Again</span>
               <span className="text-xs mt-1">1m</span>
             </button>
             <button
               onClick={() => saveCardReview('hard')}
-              className="py-3 px-2 flex flex-col items-center justify-center bg-app-yellow bg-opacity-20 rounded-lg"
+              className="py-3 px-2 flex flex-col items-center justify-center bg-yellow-100 text-yellow-600 rounded-lg"
             >
               <span className="font-medium">Hard</span>
               <span className="text-xs mt-1">8m</span>
             </button>
             <button
               onClick={() => saveCardReview('good')}
-              className="py-3 px-2 flex flex-col items-center justify-center bg-app-green bg-opacity-20 rounded-lg"
+              className="py-3 px-2 flex flex-col items-center justify-center bg-green-100 text-green-600 rounded-lg"
             >
               <span className="font-medium">Good</span>
               <span className="text-xs mt-1">15m</span>
             </button>
             <button
               onClick={() => saveCardReview('easy')}
-              className="py-3 px-2 flex flex-col items-center justify-center bg-app-blue bg-opacity-20 rounded-lg"
+              className="py-3 px-2 flex flex-col items-center justify-center bg-blue-100 text-blue-600 rounded-lg"
             >
               <span className="font-medium">Easy</span>
               <span className="text-xs mt-1">4d</span>

@@ -1,5 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { Deck, Flashcard, StudySession } from "@/types";
+import { addMinutes, addDays } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 // Initial data for the application
 const initialDecks: Deck[] = [
@@ -69,6 +71,7 @@ export const VocabProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [currentDeck, setCurrentDeck] = useState<Deck | null>(null);
   const [answerShown, setAnswerShown] = useState(false);
   const [progress, setProgress] = useState(0);
+  const { toast } = useToast();
 
   // Function to add a new deck
   const addDeck = (deck: Omit<Deck, "id" | "cardsForToday" | "studiedToday" | "toReview">) => {
@@ -146,6 +149,24 @@ export const VocabProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  // Function to calculate the next review time based on difficulty
+  const calculateNextReview = (difficulty: 'again' | 'hard' | 'good' | 'easy'): Date => {
+    const now = new Date();
+    
+    switch (difficulty) {
+      case 'again':
+        return addMinutes(now, 1); // 1 minute
+      case 'hard':
+        return addMinutes(now, 8); // 8 minutes
+      case 'good':
+        return addMinutes(now, 15); // 15 minutes
+      case 'easy':
+        return addDays(now, 4); // 4 days
+      default:
+        return addMinutes(now, 10); // Default fallback
+    }
+  };
+
   // Function to get a deck by ID
   const getDeck = (deckId: string): Deck | undefined => {
     return decks.find(deck => deck.id === deckId);
@@ -156,9 +177,18 @@ export const VocabProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return cards.filter(card => card.deckId === deckId);
   };
 
+  // Function to get cards due for review
+  const getCardsForReview = (deckId: string): Flashcard[] => {
+    const now = new Date();
+    return cards.filter(card => 
+      card.deckId === deckId && 
+      (!card.nextReview || new Date(card.nextReview) <= now)
+    );
+  };
+
   // Function to start a study session
   const startStudySession = (deckId: string) => {
-    const deckCards = getCardsForDeck(deckId);
+    const deckCards = getCardsForReview(deckId);
     const deck = getDeck(deckId);
     
     if (deck) {
@@ -171,6 +201,20 @@ export const VocabProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         currentCardIndex: 0,
         reviewedCards: []
       };
+      
+      // Show toast if there are cards to study
+      if (session.cardsToStudy.length > 0) {
+        toast({
+          title: "Study Session Started",
+          description: `${session.cardsToStudy.length} cards ready for review`,
+        });
+      } else {
+        toast({
+          title: "No Cards Due",
+          description: "No cards are due for review at this time",
+          variant: "destructive",
+        });
+      }
       
       setStudySession(session);
       setProgress(0);
@@ -220,13 +264,35 @@ export const VocabProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (studySession && currentDeck) {
       const currentCard = studySession.cardsToStudy[studySession.currentCardIndex];
       
-      // Update the card with the difficulty and last reviewed date
+      if (!currentCard) {
+        console.error("Current card is undefined");
+        return;
+      }
+      
+      const nextReview = calculateNextReview(difficulty);
+      
+      // Update the card with the difficulty and review schedule
       setCards(cards.map(card => {
         if (card.id === currentCard.id) {
-          return { ...card, difficulty, lastReviewed: new Date() };
+          return { 
+            ...card, 
+            difficulty, 
+            lastReviewed: new Date(),
+            nextReview: nextReview
+          };
         }
         return card;
       }));
+      
+      // Show toast with next review time
+      const reviewMessage = difficulty === 'easy' ? 
+        '4 days' : 
+        `${difficulty === 'again' ? '1' : difficulty === 'hard' ? '8' : '15'} minutes`;
+      
+      toast({
+        title: `Card Scheduled: ${difficulty}`,
+        description: `Next review in ${reviewMessage}`,
+      });
       
       // Update deck stats
       setDecks(decks.map(deck => {
@@ -252,13 +318,16 @@ export const VocabProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Update deck.cardsForToday for each deck
   useEffect(() => {
-    // This would normally be based on some spaced repetition algorithm
+    // Calculate cards due for review
     setDecks(decks.map(deck => {
       const deckCards = getCardsForDeck(deck.id);
+      const cardsForReview = getCardsForReview(deck.id);
+      
       return { 
         ...deck, 
-        cardsForToday: deck.id === "1" ? 11 : deckCards.length,
-        totalCards: deckCards.length
+        cardsForToday: cardsForReview.length,
+        totalCards: deckCards.length,
+        toReview: cardsForReview.length
       };
     }));
   }, [cards]);

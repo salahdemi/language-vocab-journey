@@ -6,6 +6,7 @@ export interface Flashcard {
   language: string;
   deckId: string;
   lastReviewed?: Date;
+  nextReview?: Date;
   difficulty?: 'again' | 'hard' | 'good' | 'easy';
 }
 

@@ -3,10 +3,12 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useVocab } from "@/context/VocabContext";
 import FlashcardView from "@/components/FlashcardView";
+import { useToast } from "@/hooks/use-toast";
 
 const StudyPage: React.FC = () => {
   const navigate = useNavigate();
   const { studySession, currentDeck } = useVocab();
+  const { toast } = useToast();
 
   // If there's no active study session, redirect to home
   React.useEffect(() => {
@@ -17,6 +19,15 @@ const StudyPage: React.FC = () => {
 
   // Add a safety check to ensure we have valid data before rendering
   if (!studySession || !currentDeck || !studySession.cardsToStudy || studySession.cardsToStudy.length === 0) {
+    // Show toast and redirect if no cards to study
+    React.useEffect(() => {
+      toast({
+        title: "No Cards to Study",
+        description: "There are no cards due for review at this time",
+        variant: "destructive",
+      });
+      navigate(`/deck/${currentDeck?.id || ""}`);
+    }, []);
     return null;
   }
 

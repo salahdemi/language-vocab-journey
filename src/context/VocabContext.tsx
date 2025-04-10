@@ -231,7 +231,8 @@ export const VocabProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         deckId,
         cardsToStudy: [...deckCards].sort(() => Math.random() - 0.5).slice(0, 20),
         currentCardIndex: 0,
-        reviewedCards: []
+        reviewedCards: [],
+        answerShown: false
       };
       
       // Show toast if there are cards to study
@@ -264,6 +265,14 @@ export const VocabProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Function to reveal the answer
   const showAnswer = () => {
     setAnswerShown(true);
+    
+    // Also update the studySession.answerShown property
+    if (studySession) {
+      setStudySession({
+        ...studySession,
+        answerShown: true
+      });
+    }
   };
 
   // Function to move to the next card
@@ -284,7 +293,8 @@ export const VocabProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Move to next card
       setStudySession({
         ...studySession,
-        currentCardIndex: newIndex
+        currentCardIndex: newIndex,
+        answerShown: false
       });
       
       setAnswerShown(false);
@@ -355,7 +365,11 @@ export const VocabProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         
         updatedSession.cardsToStudy.splice(newPosition, 0, currentCardObj);
         
-        // If we're removing the current card, we don't want to increment the index
+        // Reset answerShown for the next card
+        updatedSession.answerShown = false;
+        setAnswerShown(false);
+        
+        // Set the updated session
         setStudySession(updatedSession);
         
         // Add card to reviewed list
@@ -363,7 +377,8 @@ export const VocabProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           if (!prev) return null;
           return {
             ...prev,
-            reviewedCards: [...prev.reviewedCards, currentCard.id]
+            reviewedCards: [...prev.reviewedCards, currentCard.id],
+            answerShown: false
           };
         });
       } else {

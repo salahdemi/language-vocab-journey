@@ -26,4 +26,5 @@ export interface StudySession {
   cardsToStudy: Flashcard[];
   currentCardIndex: number;
   reviewedCards: string[];
+  answerShown: boolean;
 }

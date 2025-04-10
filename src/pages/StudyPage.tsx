@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useVocab } from "@/context/VocabContext";
 import FlashcardView from "@/components/FlashcardView";
@@ -7,19 +7,27 @@ import { useToast } from "@/hooks/use-toast";
 
 const StudyPage: React.FC = () => {
   const navigate = useNavigate();
-  const { studySession, currentDeck } = useVocab();
+  const { studySession, currentDeck, getNextDueCard } = useVocab();
   const { toast } = useToast();
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   // Always call hooks at the top level
-  React.useEffect(() => {
+  useEffect(() => {
     // If there's no active study session or current deck, redirect to home
     if (!studySession || !currentDeck) {
       navigate("/");
     }
-  }, [studySession, currentDeck, navigate]);
+    
+    // Clear any existing timeout when unmounting or changing sessions
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [studySession, currentDeck, navigate, timeoutId]);
 
   // Check if there are no cards to study - show toast and redirect
-  React.useEffect(() => {
+  useEffect(() => {
     if (studySession && currentDeck && (!studySession.cardsToStudy || studySession.cardsToStudy.length === 0)) {
       toast({
         title: "No Cards to Study",
@@ -30,12 +38,17 @@ const StudyPage: React.FC = () => {
     }
   }, [studySession, currentDeck, toast, navigate]);
 
-  // Check if we've gone past the last card
-  React.useEffect(() => {
-    if (studySession && currentDeck && studySession.currentCardIndex >= studySession.cardsToStudy.length) {
-      navigate(`/deck/${currentDeck.id}`);
-    }
-  }, [studySession, currentDeck, navigate]);
+  // Check for newly due cards every second
+  useEffect(() => {
+    const checkInterval = setInterval(() => {
+      if (studySession && currentDeck) {
+        // Check for any cards that are now due
+        getNextDueCard(currentDeck.id);
+      }
+    }, 1000);
+    
+    return () => clearInterval(checkInterval);
+  }, [studySession, currentDeck, getNextDueCard]);
 
   // Render conditions - return null early if we don't have valid data
   if (!studySession || !currentDeck) {

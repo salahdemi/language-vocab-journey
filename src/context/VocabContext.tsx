@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
+import React, { createContext, useState, useContext, useEffect, useCallback } from "react";
 import { Deck, Flashcard, StudySession } from "@/types";
 import { addMinutes, addDays } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -58,6 +58,7 @@ interface VocabContextType {
   getDeck: (deckId: string) => Deck | undefined;
   getCardsForDeck: (deckId: string) => Flashcard[];
   progress: number;
+  getNextDueCard: (deckId: string) => void;
 }
 
 // Create the context
@@ -186,6 +187,37 @@ export const VocabProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
   };
 
+  // Function to check for any newly due cards and add them to the study session
+  const getNextDueCard = useCallback((deckId: string) => {
+    if (!studySession) return;
+    
+    const now = new Date();
+    const dueCards = cards.filter(card => 
+      card.deckId === deckId && 
+      card.nextReview && 
+      new Date(card.nextReview) <= now &&
+      !studySession.cardsToStudy.some(c => c.id === card.id)
+    );
+    
+    if (dueCards.length > 0) {
+      // Add newly due cards to the study session
+      setStudySession(prev => {
+        if (!prev) return null;
+        
+        return {
+          ...prev,
+          cardsToStudy: [...prev.cardsToStudy, ...dueCards]
+        };
+      });
+      
+      // Show a notification that a card is ready for review
+      toast({
+        title: "Card Ready for Review",
+        description: "A previously studied card is now ready for review",
+      });
+    }
+  }, [cards, studySession, toast]);
+
   // Function to start a study session
   const startStudySession = (deckId: string) => {
     const deckCards = getCardsForReview(deckId);
@@ -197,7 +229,7 @@ export const VocabProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Set up the study session
       const session: StudySession = {
         deckId,
-        cardsToStudy: [...deckCards].sort(() => Math.random() - 0.5).slice(0, 10),
+        cardsToStudy: [...deckCards].sort(() => Math.random() - 0.5).slice(0, 20),
         currentCardIndex: 0,
         reviewedCards: []
       };
@@ -305,14 +337,45 @@ export const VocabProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return deck;
       }));
       
-      // Add card to reviewed list
-      setStudySession({
-        ...studySession,
-        reviewedCards: [...studySession.reviewedCards, currentCard.id]
-      });
-      
-      // Move to next card
-      nextCard();
+      // For "again" cards, we'll keep them in the session but move them to the end
+      if (difficulty === 'again') {
+        const updatedSession = {...studySession};
+        
+        // Remove the current card from its position
+        const currentCardObj = {...currentCard, nextReview};
+        updatedSession.cardsToStudy.splice(studySession.currentCardIndex, 1);
+        
+        // Add it to a position that will show up after approximately 1 minute
+        // (assuming average 10 seconds per card review)
+        const positionsToSkip = 6; // ~1 minute if reviewing every 10 seconds
+        const newPosition = Math.min(
+          studySession.currentCardIndex + positionsToSkip, 
+          updatedSession.cardsToStudy.length
+        );
+        
+        updatedSession.cardsToStudy.splice(newPosition, 0, currentCardObj);
+        
+        // If we're removing the current card, we don't want to increment the index
+        setStudySession(updatedSession);
+        
+        // Add card to reviewed list
+        setStudySession(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            reviewedCards: [...prev.reviewedCards, currentCard.id]
+          };
+        });
+      } else {
+        // Add card to reviewed list for non-"again" cards
+        setStudySession({
+          ...studySession,
+          reviewedCards: [...studySession.reviewedCards, currentCard.id]
+        });
+        
+        // Move to next card for non-"again" cards
+        nextCard();
+      }
     }
   };
 
@@ -348,7 +411,8 @@ export const VocabProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     saveCardReview,
     getDeck,
     getCardsForDeck,
-    progress
+    progress,
+    getNextDueCard
   };
 
   return <VocabContext.Provider value={value}>{children}</VocabContext.Provider>;

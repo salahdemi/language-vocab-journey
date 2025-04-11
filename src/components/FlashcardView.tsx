@@ -1,7 +1,6 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Flashcard } from "@/types";
-import { X, Volume2, VolumeX, ListMusic, Play, Pause } from "lucide-react";
+import { X, Volume2, VolumeX, ListMusic, Play, Pause, Headphones } from "lucide-react";
 import { useVocab } from "@/context/VocabContext";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -279,7 +278,7 @@ const FlashcardView: React.FC<FlashcardViewProps> = ({ card, cardNumber, totalCa
               onClick={playAllCards}
               className="w-full py-4 flex items-center justify-center gap-2 text-center text-white bg-blue-500 rounded-md"
             >
-              {isPlayingAll ? <Pause size={16} /> : <Play size={16} />}
+              {isPlayingAll ? <Pause size={16} /> : <Headphones size={16} />}
               {isPlayingAll ? "Stop Audio Learning" : "Learn by Listening"}
             </button>
           </div>
@@ -319,7 +318,7 @@ const FlashcardView: React.FC<FlashcardViewProps> = ({ card, cardNumber, totalCa
               onClick={playAllCards}
               className="w-full py-3 flex items-center justify-center gap-2 text-center text-white bg-blue-500 rounded-md"
             >
-              {isPlayingAll ? <Pause size={16} /> : <Play size={16} />}
+              {isPlayingAll ? <Pause size={16} /> : <Headphones size={16} />}
               {isPlayingAll ? "Stop Audio Learning" : "Learn by Listening"}
             </button>
           </div>

@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Flashcard } from "@/types";
 import { X, Volume2, VolumeX } from "lucide-react";
 import { useVocab } from "@/context/VocabContext";
@@ -19,25 +19,34 @@ const FlashcardView: React.FC<FlashcardViewProps> = ({ card, cardNumber, totalCa
 
   // Function to get text-to-speech URL
   const getAudioUrl = (text: string, lang: string) => {
-    // Using a free TTS service - in a real app, you might want to use a more reliable service
-    const language = lang === "German" ? "de" : "en";
-    return `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=${language}&client=tw-ob`;
+    // Use a more reliable TTS service API
+    return `https://api.voicerss.org/?key=2759723d03804ea899e2a0cad6d634c8&hl=${lang === "German" ? "de-de" : "ar-sa"}&v=Oda&c=MP3&f=16khz_16bit_stereo&src=${encodeURIComponent(text)}`;
   };
 
-  // Function to play both front and back audio
+  // Function to play audio
   const playAudio = () => {
+    if (isPlaying && audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+      return;
+    }
+
+    setIsPlaying(true);
+    
     if (!audioRef.current) {
       audioRef.current = new Audio();
       
-      // Event listener for when first audio ends
+      // Event listener for when audio ends
       audioRef.current.onended = () => {
-        // Play back translation after a short pause
         if (answerShown) {
           setTimeout(() => {
             if (audioRef.current) {
-              audioRef.current.src = getAudioUrl(card.back, "ar");
+              audioRef.current.src = getAudioUrl(card.back, "Arabic");
               audioRef.current.play()
-                .catch(err => console.error("Error playing audio:", err));
+                .catch(err => {
+                  console.error("Error playing back audio:", err);
+                  setIsPlaying(false);
+                });
             }
           }, 1000);
         } else {
@@ -46,28 +55,35 @@ const FlashcardView: React.FC<FlashcardViewProps> = ({ card, cardNumber, totalCa
       };
     }
 
-    // Start with the front text
+    // Play the front text audio
     audioRef.current.src = getAudioUrl(card.front, card.language);
-    
-    if (isPlaying) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      audioRef.current.play()
-        .then(() => setIsPlaying(true))
-        .catch(err => console.error("Error playing audio:", err));
-    }
+    audioRef.current.play()
+      .then(() => {
+        console.log("Audio started playing");
+      })
+      .catch(err => {
+        console.error("Error playing front audio:", err);
+        setIsPlaying(false);
+      });
   };
 
-  // Stop audio when component unmounts
-  React.useEffect(() => {
+  // Stop audio when component unmounts or card changes
+  useEffect(() => {
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
-        audioRef.current = null;
+        setIsPlaying(false);
       }
     };
-  }, []);
+  }, [card.id]);
+
+  // Reset play state when card changes
+  useEffect(() => {
+    setIsPlaying(false);
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+  }, [card.id]);
 
   // Format the review time for display
   const formatReviewTime = (difficulty: 'again' | 'hard' | 'good' | 'easy'): string => {
@@ -99,7 +115,7 @@ const FlashcardView: React.FC<FlashcardViewProps> = ({ card, cardNumber, totalCa
           variant="ghost" 
           size="icon" 
           onClick={playAudio} 
-          className="w-6"
+          className="w-10 h-10"
           aria-label={isPlaying ? "Pause audio" : "Play audio"}
         >
           {isPlaying ? <VolumeX size={20} /> : <Volume2 size={20} />}

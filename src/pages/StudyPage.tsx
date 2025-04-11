@@ -29,17 +29,12 @@ const StudyPage: React.FC = () => {
     };
   }, [studySession, currentDeck, navigate, timeoutId]);
 
-  // Check if there are no cards to study - show toast and redirect
+  // Check if there are no cards to study - redirect without toast
   useEffect(() => {
     if (studySession && currentDeck && (!studySession.cardsToStudy || studySession.cardsToStudy.length === 0)) {
-      toast({
-        title: "No Cards to Study",
-        description: "There are no cards due for review at this time",
-        variant: "destructive",
-      });
       navigate(`/deck/${currentDeck?.id || ""}`);
     }
-  }, [studySession, currentDeck, toast, navigate]);
+  }, [studySession, currentDeck, navigate]);
 
   // Check for newly due cards every second
   useEffect(() => {
@@ -54,6 +49,8 @@ const StudyPage: React.FC = () => {
           const card = studySession.cardsToStudy[studySession.currentCardIndex];
           if (card.nextReview && new Date(card.nextReview) <= new Date() && studySession.answerShown) {
             setShowRepeatButton(true);
+          } else {
+            setShowRepeatButton(false);
           }
         }
       }
@@ -89,7 +86,6 @@ const StudyPage: React.FC = () => {
   const handleRepeatNow = () => {
     setShowRepeatButton(false);
     // Reset the card to be reviewed again
-    // No toast notification here as requested
   };
 
   return (

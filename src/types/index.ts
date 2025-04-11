@@ -8,6 +8,7 @@ export interface Flashcard {
   lastReviewed?: Date;
   nextReview?: Date;
   difficulty?: 'again' | 'hard' | 'good' | 'easy';
+  audioUrl?: string;
 }
 
 export interface Deck {

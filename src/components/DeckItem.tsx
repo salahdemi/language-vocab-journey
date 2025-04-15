@@ -35,14 +35,14 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
     }
   };
 
-  const speakWord = (text: string, cardId: string) => {
+  const speakWord = (text: string, translation: string, cardId: string) => {
     // Stop any previous speech
     window.speechSynthesis.cancel();
     
-    // Create a new utterance
+    // Create a new utterance for the German word
     const utterance = new SpeechSynthesisUtterance(text);
     
-    // Set language to German (since we're using German words)
+    // Set language to German
     utterance.lang = 'de-DE';
     
     // Set indicator for currently speaking word
@@ -50,10 +50,13 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
     
     // Add event listener for when speaking ends
     utterance.onend = () => {
-      setSpeakingWordId(null);
+      // If we're not in auto-play mode, clear the speaking indicator
+      if (!isPlayingAll) {
+        setSpeakingWordId(null);
+      }
     };
     
-    // Speak the text
+    // Speak the German text
     window.speechSynthesis.speak(utterance);
   };
 
@@ -98,7 +101,7 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
       // Speak the current word
       const currentCard = deckCards[currentPlayIndex];
       if (currentCard) {
-        speakWord(currentCard.front, currentCard.id);
+        speakWord(currentCard.front, currentCard.back, currentCard.id);
         
         // Set up the next word with a delay
         timeoutRef.current = window.setTimeout(() => {
@@ -195,7 +198,7 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
                         variant="ghost" 
                         size="sm"
                         className={`p-1 ${speakingWordId === card.id ? 'text-blue-500' : 'text-gray-500'}`}
-                        onClick={() => speakWord(card.front, card.id)}
+                        onClick={() => speakWord(card.front, card.back, card.id)}
                       >
                         <Volume2 size={16} />
                       </Button>

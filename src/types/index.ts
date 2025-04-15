@@ -1,4 +1,3 @@
-
 export interface Flashcard {
   id: string;
   front: string;
@@ -9,6 +8,7 @@ export interface Flashcard {
   nextReview?: Date;
   difficulty?: 'again' | 'hard' | 'good' | 'easy';
   audioUrl?: string;
+  imageUrl?: string;
 }
 
 export interface Deck {

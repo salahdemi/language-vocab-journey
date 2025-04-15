@@ -1,9 +1,10 @@
 
 import React, { useState } from "react";
 import { Deck } from "@/types";
-import { ChevronRight, Play, X } from "lucide-react";
+import { ChevronRight, Play, X, Volume2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useVocab } from "@/context/VocabContext";
+import { Button } from "@/components/ui/button";
 
 interface DeckItemProps {
   deck: Deck;
@@ -11,6 +12,7 @@ interface DeckItemProps {
 
 const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
   const [showWords, setShowWords] = useState(false);
+  const [speakingWordId, setSpeakingWordId] = useState<string | null>(null);
   const { getCardsForDeck } = useVocab();
   const deckCards = getCardsForDeck(deck.id);
 
@@ -24,6 +26,28 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
     e.preventDefault();
     e.stopPropagation();
     setShowWords(false);
+  };
+
+  const speakWord = (text: string, cardId: string) => {
+    // Stop any previous speech
+    window.speechSynthesis.cancel();
+    
+    // Create a new utterance
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Set language to German (since we're using German words)
+    utterance.lang = 'de-DE';
+    
+    // Set indicator for currently speaking word
+    setSpeakingWordId(cardId);
+    
+    // Add event listener for when speaking ends
+    utterance.onend = () => {
+      setSpeakingWordId(null);
+    };
+    
+    // Speak the text
+    window.speechSynthesis.speak(utterance);
   };
 
   return (
@@ -66,7 +90,17 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
               <div className="space-y-2">
                 {deckCards.map((card) => (
                   <div key={card.id} className="flex flex-col border-b border-gray-200 pb-2">
-                    <div className="font-medium">{card.front}</div>
+                    <div className="flex justify-between items-center">
+                      <div className="font-medium">{card.front}</div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className={`p-1 ${speakingWordId === card.id ? 'text-blue-500' : 'text-gray-500'}`}
+                        onClick={() => speakWord(card.front, card.id)}
+                      >
+                        <Volume2 size={16} />
+                      </Button>
+                    </div>
                     <div className="text-gray-600 rtl">{card.back}</div>
                   </div>
                 ))}

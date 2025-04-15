@@ -39,7 +39,7 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
     // Stop any previous speech
     window.speechSynthesis.cancel();
     
-    // Create a new utterance for the German word
+    // Create a new utterance for the German word only
     const utterance = new SpeechSynthesisUtterance(text);
     
     // Set language to German
@@ -56,7 +56,7 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
       }
     };
     
-    // Speak the German text
+    // Speak only the German text
     window.speechSynthesis.speak(utterance);
   };
 

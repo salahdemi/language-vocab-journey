@@ -38,34 +38,35 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
     // Stop any previous speech
     window.speechSynthesis.cancel();
     
-    // First speak the German word
-    const utteranceGerman = new SpeechSynthesisUtterance(text);
-    utteranceGerman.lang = 'de-DE';
-    
     // Set indicator for currently speaking word
     setSpeakingWordId(cardId);
     
+    // Create utterance for German word
+    const utteranceGerman = new SpeechSynthesisUtterance(text);
+    utteranceGerman.lang = 'de-DE';
+    
+    // Create utterance for Arabic translation
+    const utteranceArabic = new SpeechSynthesisUtterance(translation);
+    utteranceArabic.lang = 'ar-SA';
+    utteranceArabic.rate = 0.7; // Slower rate for better Arabic pronunciation
+    utteranceArabic.pitch = 1.0;
+    utteranceArabic.volume = 1.0;
+    
     // Add event listener for when German speaking ends
     utteranceGerman.onend = () => {
-      // Then speak the Arabic translation
-      const utteranceArabic = new SpeechSynthesisUtterance(translation);
-      utteranceArabic.lang = 'ar-SA'; // Arabic language code
-      utteranceArabic.rate = 0.7; // Slower rate for better pronunciation
-      utteranceArabic.pitch = 1.0; // Normal pitch
-      utteranceArabic.volume = 1.0; // Full volume
-      
-      // Add event listener for when Arabic speaking ends
-      utteranceArabic.onend = () => {
-        // If we're not in auto-play mode, clear the speaking indicator
-        if (!isPlayingAll) {
-          setSpeakingWordId(null);
-        }
-      };
-      
+      // Speak the Arabic translation after German is done
       window.speechSynthesis.speak(utteranceArabic);
     };
     
-    // Speak the German word first
+    // Add event listener for when Arabic speaking ends
+    utteranceArabic.onend = () => {
+      // If we're not in auto-play mode, clear the speaking indicator
+      if (!isPlayingAll) {
+        setSpeakingWordId(null);
+      }
+    };
+    
+    // Start speaking German first
     window.speechSynthesis.speak(utteranceGerman);
   };
 
@@ -112,7 +113,7 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
       if (currentCard) {
         speakWord(currentCard.front, currentCard.back, currentCard.id);
         
-        // Set up the next word with a longer delay to accommodate both words being spoken sequentially
+        // Set up the next word with a delay that allows both words to be spoken
         timeoutRef.current = window.setTimeout(() => {
           // Move to the next word
           if (currentPlayIndex < deckCards.length - 1) {
@@ -121,7 +122,7 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
             // We've reached the end of the list
             stopAutoPlay();
           }
-        }, 6000); // 6 second delay to ensure both words can be spoken fully
+        }, 5000); // 5 second delay to ensure both words can be spoken fully
       }
     }
     
@@ -142,6 +143,18 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
       }
     };
   }, []);
+
+  // Function to handle individual word pronunciation
+  const handlePronounce = (text: string, translation: string, cardId: string) => {
+    if (speakingWordId === cardId) {
+      // If already speaking this word, stop it
+      window.speechSynthesis.cancel();
+      setSpeakingWordId(null);
+    } else {
+      // Otherwise speak this word
+      speakWord(text, translation, cardId);
+    }
+  };
 
   return (
     <div className="relative flex flex-col border-b border-gray-200 py-4 px-4">
@@ -207,7 +220,7 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
                         variant="ghost" 
                         size="sm"
                         className={`p-1 ${speakingWordId === card.id ? 'text-blue-500' : 'text-gray-500'}`}
-                        onClick={() => speakWord(card.front, card.back, card.id)}
+                        onClick={() => handlePronounce(card.front, card.back, card.id)}
                       >
                         <Volume2 size={16} />
                       </Button>

@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Flashcard } from "@/types";
-import { X } from "lucide-react";
+import { X, Volume2 } from "lucide-react";
 import { useVocab } from "@/context/VocabContext";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ interface FlashcardViewProps {
 
 const FlashcardView: React.FC<FlashcardViewProps> = ({ card, cardNumber, totalCards }) => {
   const { answerShown, showAnswer, saveCardReview } = useVocab();
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   // Format the review time for display
   const formatReviewTime = (difficulty: 'again' | 'hard' | 'good' | 'easy'): string => {
@@ -29,6 +30,33 @@ const FlashcardView: React.FC<FlashcardViewProps> = ({ card, cardNumber, totalCa
       default:
         return '';
     }
+  };
+
+  // Function to speak text with proper language detection
+  const speakText = (text: string, isArabic: boolean = false) => {
+    window.speechSynthesis.cancel(); // Cancel any ongoing speech
+    setIsSpeaking(true);
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Set appropriate language based on the text
+    if (isArabic) {
+      utterance.lang = 'ar-SA';
+      utterance.rate = 0.7; // Slower rate for better Arabic pronunciation
+      utterance.pitch = 1.0;
+    } else {
+      utterance.lang = 'de-DE'; // Default to German for front of card
+    }
+    
+    utterance.onend = () => {
+      setIsSpeaking(false);
+    };
+    
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+    };
+    
+    window.speechSynthesis.speak(utterance);
   };
 
   return (
@@ -63,8 +91,19 @@ const FlashcardView: React.FC<FlashcardViewProps> = ({ card, cardNumber, totalCa
           )}
           
           {/* Front of card */}
-          <div className="text-3xl text-center font-medium my-auto py-16 flex items-center justify-center gap-3">
-            {card.front}
+          <div className="text-3xl text-center font-medium my-auto py-16 flex flex-col items-center justify-center gap-3">
+            <div className="flex items-center gap-2">
+              {card.front}
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className={`p-1 ${isSpeaking ? 'text-blue-500' : 'text-gray-500'}`}
+                onClick={() => speakText(card.front)}
+                disabled={isSpeaking}
+              >
+                <Volume2 size={20} />
+              </Button>
+            </div>
             {card.imageUrl && (
               <img 
                 src={card.imageUrl} 
@@ -81,8 +120,19 @@ const FlashcardView: React.FC<FlashcardViewProps> = ({ card, cardNumber, totalCa
 
           {/* Back of card (answer) */}
           {answerShown && (
-            <div className="text-3xl text-center font-medium my-auto py-16 rtl">
-              {card.back}
+            <div className="text-3xl text-center font-medium my-auto py-16 rtl flex flex-col items-center">
+              <div className="flex items-center gap-2">
+                {card.back}
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className={`p-1 ${isSpeaking ? 'text-blue-500' : 'text-gray-500'}`}
+                  onClick={() => speakText(card.back, true)}
+                  disabled={isSpeaking}
+                >
+                  <Volume2 size={20} />
+                </Button>
+              </div>
             </div>
           )}
         </div>

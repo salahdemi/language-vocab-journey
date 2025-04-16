@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Deck } from "@/types";
 import { ChevronRight, Play, X, Volume2, Pause } from "lucide-react";
@@ -42,24 +43,30 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
     const utteranceGerman = new SpeechSynthesisUtterance(text);
     utteranceGerman.lang = 'de-DE';
     
-    // Then speak the translation (assuming Arabic)
-    const utteranceTranslation = new SpeechSynthesisUtterance(translation);
-    utteranceTranslation.lang = 'ar';
+    // Wait for German word to finish before speaking Arabic
+    utteranceGerman.onend = () => {
+      // Then speak the Arabic translation
+      const utteranceArabic = new SpeechSynthesisUtterance(translation);
+      utteranceArabic.lang = 'ar-SA'; // Proper Arabic language code
+      utteranceArabic.rate = 0.8; // Slightly slower rate for better pronunciation
+      
+      // Add event listener for when Arabic speaking ends
+      utteranceArabic.onend = () => {
+        // If we're not in auto-play mode, clear the speaking indicator
+        if (!isPlayingAll) {
+          setSpeakingWordId(null);
+        }
+      };
+      
+      // Speak the Arabic translation
+      window.speechSynthesis.speak(utteranceArabic);
+    };
     
     // Set indicator for currently speaking word
     setSpeakingWordId(cardId);
     
-    // Add event listener for when all speaking ends
-    utteranceTranslation.onend = () => {
-      // If we're not in auto-play mode, clear the speaking indicator
-      if (!isPlayingAll) {
-        setSpeakingWordId(null);
-      }
-    };
-    
-    // Speak the German word first, then the translation
+    // Speak the German word first
     window.speechSynthesis.speak(utteranceGerman);
-    window.speechSynthesis.speak(utteranceTranslation);
   };
 
   const startAutoPlay = () => {
@@ -105,7 +112,7 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
       if (currentCard) {
         speakWord(currentCard.front, currentCard.back, currentCard.id);
         
-        // Set up the next word with a delay - increased to 5 seconds to accommodate both words
+        // Set up the next word with a longer delay to accommodate both words being spoken sequentially
         timeoutRef.current = window.setTimeout(() => {
           // Move to the next word
           if (currentPlayIndex < deckCards.length - 1) {
@@ -114,7 +121,7 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
             // We've reached the end of the list
             stopAutoPlay();
           }
-        }, 5000); // 5 second delay between words to allow time for both words to be spoken
+        }, 6000); // 6 second delay to ensure both words can be spoken fully
       }
     }
     

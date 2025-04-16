@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Deck } from "@/types";
 import { ChevronRight, Play, X, Volume2, Pause } from "lucide-react";
@@ -43,12 +42,17 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
     const utteranceGerman = new SpeechSynthesisUtterance(text);
     utteranceGerman.lang = 'de-DE';
     
-    // Wait for German word to finish before speaking Arabic
+    // Set indicator for currently speaking word
+    setSpeakingWordId(cardId);
+    
+    // Add event listener for when German speaking ends
     utteranceGerman.onend = () => {
       // Then speak the Arabic translation
       const utteranceArabic = new SpeechSynthesisUtterance(translation);
-      utteranceArabic.lang = 'ar-SA'; // Proper Arabic language code
-      utteranceArabic.rate = 0.8; // Slightly slower rate for better pronunciation
+      utteranceArabic.lang = 'ar-SA'; // Arabic language code
+      utteranceArabic.rate = 0.7; // Slower rate for better pronunciation
+      utteranceArabic.pitch = 1.0; // Normal pitch
+      utteranceArabic.volume = 1.0; // Full volume
       
       // Add event listener for when Arabic speaking ends
       utteranceArabic.onend = () => {
@@ -58,12 +62,8 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
         }
       };
       
-      // Speak the Arabic translation
       window.speechSynthesis.speak(utteranceArabic);
     };
-    
-    // Set indicator for currently speaking word
-    setSpeakingWordId(cardId);
     
     // Speak the German word first
     window.speechSynthesis.speak(utteranceGerman);

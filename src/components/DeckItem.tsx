@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Deck } from "@/types";
 import { ChevronRight, Play, X, Volume2, Pause } from "lucide-react";
@@ -39,25 +38,28 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
     // Stop any previous speech
     window.speechSynthesis.cancel();
     
-    // Create a new utterance for the German word only
-    const utterance = new SpeechSynthesisUtterance(text);
+    // First speak the German word
+    const utteranceGerman = new SpeechSynthesisUtterance(text);
+    utteranceGerman.lang = 'de-DE';
     
-    // Set language to German
-    utterance.lang = 'de-DE';
+    // Then speak the translation (assuming Arabic)
+    const utteranceTranslation = new SpeechSynthesisUtterance(translation);
+    utteranceTranslation.lang = 'ar';
     
     // Set indicator for currently speaking word
     setSpeakingWordId(cardId);
     
-    // Add event listener for when speaking ends
-    utterance.onend = () => {
+    // Add event listener for when all speaking ends
+    utteranceTranslation.onend = () => {
       // If we're not in auto-play mode, clear the speaking indicator
       if (!isPlayingAll) {
         setSpeakingWordId(null);
       }
     };
     
-    // Speak only the German text
-    window.speechSynthesis.speak(utterance);
+    // Speak the German word first, then the translation
+    window.speechSynthesis.speak(utteranceGerman);
+    window.speechSynthesis.speak(utteranceTranslation);
   };
 
   const startAutoPlay = () => {
@@ -103,7 +105,7 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
       if (currentCard) {
         speakWord(currentCard.front, currentCard.back, currentCard.id);
         
-        // Set up the next word with a delay
+        // Set up the next word with a delay - increased to 5 seconds to accommodate both words
         timeoutRef.current = window.setTimeout(() => {
           // Move to the next word
           if (currentPlayIndex < deckCards.length - 1) {
@@ -112,7 +114,7 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
             // We've reached the end of the list
             stopAutoPlay();
           }
-        }, 3000); // 3 second delay between words
+        }, 5000); // 5 second delay between words to allow time for both words to be spoken
       }
     }
     

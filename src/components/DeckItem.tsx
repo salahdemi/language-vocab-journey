@@ -34,6 +34,35 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
     }
   };
 
+  // Function to speak only Arabic
+  const speakArabicOnly = (text: string, cardId: string) => {
+    // Stop any previous speech
+    window.speechSynthesis.cancel();
+    
+    // Set indicator for currently speaking word
+    setSpeakingWordId(cardId);
+    
+    // Create utterance for Arabic only
+    const utteranceArabic = new SpeechSynthesisUtterance(text);
+    utteranceArabic.lang = 'ar-SA';
+    utteranceArabic.rate = 0.7; // Slower rate for better Arabic pronunciation
+    utteranceArabic.pitch = 1.0;
+    utteranceArabic.volume = 1.0;
+    
+    // When speech ends
+    utteranceArabic.onend = () => {
+      setSpeakingWordId(null);
+    };
+    
+    // If there's an error
+    utteranceArabic.onerror = () => {
+      setSpeakingWordId(null);
+    };
+    
+    // Start speaking Arabic
+    window.speechSynthesis.speak(utteranceArabic);
+  };
+
   const speakWord = (text: string, translation: string, cardId: string) => {
     // Stop any previous speech
     window.speechSynthesis.cancel();
@@ -108,12 +137,12 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
   // Effect to manage the auto-play sequence
   useEffect(() => {
     if (isPlayingAll && deckCards.length > 0) {
-      // Speak the current word
+      // Speak only the Arabic translation
       const currentCard = deckCards[currentPlayIndex];
       if (currentCard) {
-        speakWord(currentCard.front, currentCard.back, currentCard.id);
+        speakArabicOnly(currentCard.back, currentCard.id);
         
-        // Set up the next word with a delay that allows both words to be spoken
+        // Set up the next word with a delay
         timeoutRef.current = window.setTimeout(() => {
           // Move to the next word
           if (currentPlayIndex < deckCards.length - 1) {
@@ -122,7 +151,7 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
             // We've reached the end of the list
             stopAutoPlay();
           }
-        }, 5000); // 5 second delay to ensure both words can be spoken fully
+        }, 3000); // 3 second delay for Arabic only
       }
     }
     
@@ -151,8 +180,8 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
       window.speechSynthesis.cancel();
       setSpeakingWordId(null);
     } else {
-      // Otherwise speak this word
-      speakWord(text, translation, cardId);
+      // Otherwise speak only the Arabic translation
+      speakArabicOnly(translation, cardId);
     }
   };
 

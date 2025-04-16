@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Flashcard } from "@/types";
 import { X, Volume2 } from "lucide-react";
@@ -30,6 +29,28 @@ const FlashcardView: React.FC<FlashcardViewProps> = ({ card, cardNumber, totalCa
       default:
         return '';
     }
+  };
+
+  // Function to speak only Arabic text
+  const speakArabicText = (text: string) => {
+    window.speechSynthesis.cancel(); // Cancel any ongoing speech
+    setIsSpeaking(true);
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ar-SA';
+    utterance.rate = 0.7; // Slower rate for better Arabic pronunciation
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+    
+    utterance.onend = () => {
+      setIsSpeaking(false);
+    };
+    
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+    };
+    
+    window.speechSynthesis.speak(utterance);
   };
 
   // Function to speak text with proper language detection
@@ -127,7 +148,7 @@ const FlashcardView: React.FC<FlashcardViewProps> = ({ card, cardNumber, totalCa
                   variant="ghost" 
                   size="sm"
                   className={`p-1 ${isSpeaking ? 'text-blue-500' : 'text-gray-500'}`}
-                  onClick={() => speakText(card.back, true)}
+                  onClick={() => speakArabicText(card.back)} 
                   disabled={isSpeaking}
                 >
                   <Volume2 size={20} />

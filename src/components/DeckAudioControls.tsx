@@ -1,25 +1,55 @@
 
-import React from "react";
-import { Volume2, Pause, Headphones } from "lucide-react";
+import React, { useState } from "react";
+import { Volume2, Pause, Headphones, VolumeX } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAudioPlayback } from "@/hooks/use-audio-playback";
 import { Flashcard } from "@/types";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface DeckAudioControlsProps {
   cards: Flashcard[];
 }
 
 const DeckAudioControls: React.FC<DeckAudioControlsProps> = ({ cards }) => {
+  const [testingAudio, setTestingAudio] = useState(false);
+  const { toast } = useToast();
+  
   const { 
     isPlaying, 
     togglePlayback, 
     currentCardIndex,
-    testAudioOutput
+    testAudioOutput,
+    isSpeechSupported
   } = useAudioPlayback(cards);
 
   if (cards.length === 0) {
     return null;
+  }
+  
+  const handleTestAudio = () => {
+    setTestingAudio(true);
+    testAudioOutput();
+    setTimeout(() => setTestingAudio(false), 3000);
+  };
+  
+  // If speech is not supported, show a warning
+  if (!isSpeechSupported) {
+    return (
+      <Card className="mb-4 mx-4 bg-red-50">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            <VolumeX size={24} className="text-red-500" />
+            <div>
+              <h3 className="font-medium text-red-700">Speech Not Supported</h3>
+              <p className="text-sm text-red-600">
+                Your browser doesn't support the text-to-speech features needed for audio playback.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -27,11 +57,11 @@ const DeckAudioControls: React.FC<DeckAudioControlsProps> = ({ cards }) => {
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-medium">Audio Playback</h3>
+            <h3 className="font-medium">Arabic Audio Playback</h3>
             <p className="text-sm text-gray-500">
               {isPlaying 
                 ? `Playing ${currentCardIndex + 1} of ${cards.length}`
-                : `Play all ${cards.length} vocabulary items`}
+                : `Listen to all ${cards.length} Arabic vocabulary items`}
             </p>
           </div>
           
@@ -39,10 +69,12 @@ const DeckAudioControls: React.FC<DeckAudioControlsProps> = ({ cards }) => {
             <Button
               variant="outline"
               size="sm"
-              onClick={testAudioOutput}
+              onClick={handleTestAudio}
               className="flex items-center gap-2"
+              disabled={testingAudio || isPlaying}
             >
-              <Headphones size={16} /> Test Sound
+              <Headphones size={16} />
+              {testingAudio ? 'Testing...' : 'Test Audio'}
             </Button>
             
             <button
@@ -50,6 +82,7 @@ const DeckAudioControls: React.FC<DeckAudioControlsProps> = ({ cards }) => {
               className={`flex items-center justify-center p-3 rounded-full ${
                 isPlaying ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
               }`}
+              aria-label={isPlaying ? "Stop audio playback" : "Start audio playback"}
             >
               {isPlaying ? <Pause size={24} /> : <Volume2 size={24} />}
             </button>

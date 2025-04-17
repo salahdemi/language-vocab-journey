@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Flashcard } from "@/types";
 
@@ -14,8 +14,8 @@ const PlayAllButton: React.FC<PlayAllButtonProps> = ({ cards, isPlaying, onPlayT
   return (
     <Button 
       onClick={onPlayToggle}
-      variant="outline"
-      className={`flex items-center gap-2 ${isPlaying ? 'bg-gray-200' : ''}`}
+      variant={isPlaying ? "destructive" : "default"}
+      className="flex items-center gap-2"
       disabled={cards.length === 0}
     >
       {isPlaying ? (
@@ -25,8 +25,8 @@ const PlayAllButton: React.FC<PlayAllButtonProps> = ({ cards, isPlaying, onPlayT
         </>
       ) : (
         <>
-          <Play size={18} />
-          <span>Play All</span>
+          <Volume2 size={18} />
+          <span>Play All Arabic</span>
         </>
       )}
     </Button>

@@ -53,21 +53,14 @@ const FlashcardView: React.FC<FlashcardViewProps> = ({ card, cardNumber, totalCa
     window.speechSynthesis.speak(utterance);
   };
 
-  // Function to speak text with proper language detection
-  const speakText = (text: string, isArabic: boolean = false) => {
+  // Function to speak German text
+  const speakGermanText = (text: string) => {
     window.speechSynthesis.cancel(); // Cancel any ongoing speech
     setIsSpeaking(true);
     
     const utterance = new SpeechSynthesisUtterance(text);
-    
-    // Set appropriate language based on the text
-    if (isArabic) {
-      utterance.lang = 'ar-SA';
-      utterance.rate = 0.7; // Slower rate for better Arabic pronunciation
-      utterance.pitch = 1.0;
-    } else {
-      utterance.lang = 'de-DE'; // Default to German for front of card
-    }
+    utterance.lang = 'de-DE';
+    utterance.rate = 0.9;
     
     utterance.onend = () => {
       setIsSpeaking(false);
@@ -80,6 +73,54 @@ const FlashcardView: React.FC<FlashcardViewProps> = ({ card, cardNumber, totalCa
     window.speechSynthesis.speak(utterance);
   };
 
+  // Function to speak both German and Arabic in sequence
+  const speakBothLanguages = async () => {
+    window.speechSynthesis.cancel(); // Cancel any ongoing speech
+    setIsSpeaking(true);
+    
+    // First speak German
+    const utteranceGerman = new SpeechSynthesisUtterance(card.front);
+    utteranceGerman.lang = 'de-DE';
+    utteranceGerman.rate = 0.9;
+    
+    // Create promise for German speech
+    const germanSpeech = new Promise<void>((resolve) => {
+      utteranceGerman.onend = () => resolve();
+      utteranceGerman.onerror = () => resolve(); // Continue even if error
+      window.speechSynthesis.speak(utteranceGerman);
+    });
+    
+    // Wait for German to finish
+    await germanSpeech;
+    
+    // Small pause
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    // If answer is shown, also speak Arabic
+    if (answerShown) {
+      const utteranceArabic = new SpeechSynthesisUtterance(card.back);
+      utteranceArabic.lang = 'ar-SA';
+      utteranceArabic.rate = 0.7;
+      utteranceArabic.pitch = 1.0;
+      
+      const arabicSpeech = new Promise<void>((resolve) => {
+        utteranceArabic.onend = () => {
+          setIsSpeaking(false);
+          resolve();
+        };
+        utteranceArabic.onerror = () => {
+          setIsSpeaking(false);
+          resolve();
+        };
+        window.speechSynthesis.speak(utteranceArabic);
+      });
+      
+      await arabicSpeech;
+    } else {
+      setIsSpeaking(false);
+    }
+  };
+
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
@@ -90,7 +131,15 @@ const FlashcardView: React.FC<FlashcardViewProps> = ({ card, cardNumber, totalCa
         <div className="px-4 py-1 bg-gray-200 rounded-full">
           <span>{cardNumber}/{totalCards}</span>
         </div>
-        <div className="w-6"></div> {/* Empty div for balance */}
+        <Button 
+          variant="ghost"
+          size="sm"
+          className="p-2"
+          onClick={speakBothLanguages}
+          disabled={isSpeaking}
+        >
+          <Volume2 size={18} className={isSpeaking ? "text-blue-500" : ""} />
+        </Button>
       </div>
 
       {/* Progress bar */}
@@ -119,7 +168,7 @@ const FlashcardView: React.FC<FlashcardViewProps> = ({ card, cardNumber, totalCa
                 variant="ghost" 
                 size="sm"
                 className={`p-1 ${isSpeaking ? 'text-blue-500' : 'text-gray-500'}`}
-                onClick={() => speakText(card.front)}
+                onClick={() => speakGermanText(card.front)}
                 disabled={isSpeaking}
               >
                 <Volume2 size={20} />

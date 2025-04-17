@@ -1,9 +1,12 @@
 
 import React from "react";
 import { Flashcard } from "@/types";
-import { MoreVertical, Upload } from "lucide-react";
+import { MoreVertical, Upload, Volume2 } from "lucide-react";
 import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
 import ImportCardsDialog from "./ImportCardsDialog";
+import PlayAllButton from "./PlayAllButton";
+import { useAudioPlayback } from "@/hooks/use-audio-playback";
+import { Button } from "@/components/ui/button";
 
 interface DeckCardsProps {
   cards: Flashcard[];
@@ -11,6 +14,14 @@ interface DeckCardsProps {
 }
 
 const DeckCards: React.FC<DeckCardsProps> = ({ cards, deckId }) => {
+  const { 
+    isPlaying, 
+    speakingWordId, 
+    speakVocabPair, 
+    togglePlayback, 
+    currentCardIndex 
+  } = useAudioPlayback(cards);
+
   return (
     <div className="px-4 py-6">
       <div className="flex justify-between items-center mb-4">
@@ -36,16 +47,40 @@ const DeckCards: React.FC<DeckCardsProps> = ({ cards, deckId }) => {
         </div>
       </div>
       
+      {/* Play All Button */}
+      {cards.length > 0 && (
+        <div className="mb-4">
+          <PlayAllButton 
+            cards={cards}
+            isPlaying={isPlaying}
+            onPlayToggle={togglePlayback}
+          />
+        </div>
+      )}
+      
       {/* Card list */}
       <div className="space-y-4">
         {cards.length > 0 ? (
-          cards.map((card) => (
+          cards.map((card, index) => (
             <div
               key={card.id}
-              className="bg-white rounded-lg border border-gray-200 p-4"
+              className={`bg-white rounded-lg border border-gray-200 p-4 ${
+                isPlaying && index === currentCardIndex ? 'bg-blue-50' : ''
+              }`}
             >
-              <div className="flex justify-between">
-                <h3 className="text-xl font-medium">{card.front}</h3>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xl font-medium">{card.front}</h3>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className={`p-1 ${speakingWordId === card.id ? 'text-blue-500' : 'text-gray-500'}`}
+                    onClick={() => speakVocabPair(card.front, card.back, card.id)}
+                    disabled={isPlaying}
+                  >
+                    <Volume2 size={16} />
+                  </Button>
+                </div>
                 <button>
                   <MoreVertical size={20} />
                 </button>

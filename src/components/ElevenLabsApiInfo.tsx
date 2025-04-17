@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Code } from "lucide-react";
+import { Code, Volume2, Radio } from "lucide-react";
 
 const ElevenLabsApiInfo: React.FC = () => {
   return (
@@ -18,9 +18,10 @@ const ElevenLabsApiInfo: React.FC = () => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="introduction" className="w-full">
-          <TabsList className="grid grid-cols-2 mb-4">
+          <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="introduction">Introduction</TabsTrigger>
             <TabsTrigger value="authentication">Authentication</TabsTrigger>
+            <TabsTrigger value="streaming">Streaming</TabsTrigger>
           </TabsList>
           
           <TabsContent value="introduction" className="space-y-4">
@@ -77,22 +78,78 @@ const ElevenLabsApiInfo: React.FC = () => {
                 <p>&nbsp;&nbsp;-H 'Content-Type: application/json' \</p>
                 <p>&nbsp;&nbsp;-H 'xi-api-key: $ELEVENLABS_API_KEY'</p>
               </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="streaming" className="space-y-4">
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Audio Streaming</h3>
+              <p>
+                The ElevenLabs API supports real-time audio streaming for select endpoints, returning raw audio 
+                bytes (e.g., MP3 data) directly over HTTP using chunked transfer encoding. This allows clients 
+                to process or play audio incrementally as it is generated.
+              </p>
               
-              <h4 className="font-medium mt-4">With Python:</h4>
-              <div className="bg-gray-100 p-3 rounded-md font-mono text-sm">
+              <div className="flex items-center gap-2 mt-3 text-blue-600">
+                <Volume2 size={20} />
+                <h4 className="font-medium">Streaming Support</h4>
+              </div>
+              <p>Streaming is supported for:</p>
+              <ul className="list-disc list-inside space-y-1 ml-2">
+                <li>Text to Speech API</li>
+                <li>Voice Changer API</li>
+                <li>Audio Isolation API</li>
+              </ul>
+              
+              <h4 className="font-medium mt-4">Python Example:</h4>
+              <div className="bg-gray-100 p-3 rounded-md font-mono text-sm overflow-x-auto">
+                <p>from elevenlabs import stream</p>
                 <p>from elevenlabs.client import ElevenLabs</p>
-                <p>client = ElevenLabs(</p>
-                <p>&nbsp;&nbsp;api_key='YOUR_API_KEY',</p>
+                <p>client = ElevenLabs()</p>
+                <p>audio_stream = client.text_to_speech.convert_as_stream(</p>
+                <p>&nbsp;&nbsp;text="This is a test",</p>
+                <p>&nbsp;&nbsp;voice_id="JBFqnCBsd6RMkjVDRZzb",</p>
+                <p>&nbsp;&nbsp;model_id="eleven_multilingual_v2"</p>
                 <p>)</p>
+                <p># option 1: play the streamed audio locally</p>
+                <p>stream(audio_stream)</p>
+                <p># option 2: process the audio bytes manually</p>
+                <p>for chunk in audio_stream:</p>
+                <p>&nbsp;&nbsp;if isinstance(chunk, bytes):</p>
+                <p>&nbsp;&nbsp;&nbsp;&nbsp;print(chunk)</p>
               </div>
               
-              <h4 className="font-medium mt-4">With Node.js:</h4>
-              <div className="bg-gray-100 p-3 rounded-md font-mono text-sm">
-                <p>import {"{ ElevenLabsClient }"} from 'elevenlabs';</p>
-                <p>const client = new ElevenLabsClient({"{"}</p>
-                <p>&nbsp;&nbsp;apiKey: 'YOUR_API_KEY',</p>
-                <p>{"}"});</p>
+              <h4 className="font-medium mt-4">Node.js / TypeScript Example:</h4>
+              <div className="bg-gray-100 p-3 rounded-md font-mono text-sm overflow-x-auto">
+                <p>import {"{ ElevenLabsClient, stream }"} from 'elevenlabs';</p>
+                <p>import {"{ Readable }"} from 'stream';</p>
+                <p>const client = new ElevenLabsClient();</p>
+                <p>async function main() {"{"}</p>
+                <p>&nbsp;&nbsp;const audioStream = await client.textToSpeech.convertAsStream('JBFqnCBsd6RMkjVDRZzb', {"{"}</p>
+                <p>&nbsp;&nbsp;&nbsp;&nbsp;text: 'This is a test',</p>
+                <p>&nbsp;&nbsp;&nbsp;&nbsp;model_id: 'eleven_multilingual_v2',</p>
+                <p>&nbsp;&nbsp;{"}"});</p>
+                <p>&nbsp;&nbsp;// option 1: play the streamed audio locally</p>
+                <p>&nbsp;&nbsp;await stream(Readable.from(audioStream));</p>
+                <p>&nbsp;&nbsp;// option 2: process the audio manually</p>
+                <p>&nbsp;&nbsp;for await (const chunk of audioStream) {"{"}</p>
+                <p>&nbsp;&nbsp;&nbsp;&nbsp;console.log(chunk);</p>
+                <p>&nbsp;&nbsp;{"}"}</p>
+                <p>{"}"}</p>
+                <p>main();</p>
               </div>
+              
+              <div className="flex items-center gap-2 mt-4 text-green-600">
+                <Radio size={20} />
+                <h4 className="font-medium">Available Voice IDs</h4>
+              </div>
+              <p>Popular ElevenLabs voice IDs you can use:</p>
+              <ul className="list-disc list-inside space-y-1 ml-2">
+                <li><strong>George:</strong> JBFqnCBsd6RMkjVDRZzb</li>
+                <li><strong>Rachel:</strong> 21m00Tcm4TlvDq8ikWAM</li>
+                <li><strong>Aria:</strong> 9BWtsMINqrJLrRacOk9x</li>
+                <li><strong>Daniel:</strong> onwK4e9ZLuTAKqWW03F9</li>
+              </ul>
             </div>
           </TabsContent>
         </Tabs>

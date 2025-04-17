@@ -45,7 +45,7 @@ const DeckAudioControls: React.FC<DeckAudioControlsProps> = ({ cards }) => {
               <div>
                 <h3 className="font-medium text-red-700">Speech Not Supported</h3>
                 <p className="text-sm text-red-600">
-                  Your browser doesn't support the text-to-speech features needed for audio playback.
+                  Your browser doesn't support the built-in text-to-speech features. Consider using ElevenLabs API instead.
                 </p>
               </div>
             </div>

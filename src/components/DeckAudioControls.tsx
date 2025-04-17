@@ -1,9 +1,10 @@
 
 import React from "react";
-import { Volume2, Pause } from "lucide-react";
+import { Volume2, Pause, Headphones } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAudioPlayback } from "@/hooks/use-audio-playback";
 import { Flashcard } from "@/types";
+import { Button } from "@/components/ui/button";
 
 interface DeckAudioControlsProps {
   cards: Flashcard[];
@@ -13,7 +14,8 @@ const DeckAudioControls: React.FC<DeckAudioControlsProps> = ({ cards }) => {
   const { 
     isPlaying, 
     togglePlayback, 
-    currentCardIndex 
+    currentCardIndex,
+    testAudioOutput
   } = useAudioPlayback(cards);
 
   if (cards.length === 0) {
@@ -33,14 +35,25 @@ const DeckAudioControls: React.FC<DeckAudioControlsProps> = ({ cards }) => {
             </p>
           </div>
           
-          <button
-            onClick={togglePlayback}
-            className={`flex items-center justify-center p-3 rounded-full ${
-              isPlaying ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
-            }`}
-          >
-            {isPlaying ? <Pause size={24} /> : <Volume2 size={24} />}
-          </button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={testAudioOutput}
+              className="flex items-center gap-2"
+            >
+              <Headphones size={16} /> Test Sound
+            </Button>
+            
+            <button
+              onClick={togglePlayback}
+              className={`flex items-center justify-center p-3 rounded-full ${
+                isPlaying ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
+              }`}
+            >
+              {isPlaying ? <Pause size={24} /> : <Volume2 size={24} />}
+            </button>
+          </div>
         </div>
         
         {isPlaying && cards.length > 1 && (

@@ -1,6 +1,6 @@
 
-import React, { useState } from "react";
-import { Play, Pause, Volume2 } from "lucide-react";
+import React from "react";
+import { Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Flashcard } from "@/types";
 
@@ -25,7 +25,7 @@ const PlayAllButton: React.FC<PlayAllButtonProps> = ({ cards, isPlaying, onPlayT
         </>
       ) : (
         <>
-          <Volume2 size={18} />
+          <Play size={18} />
           <span>Play All</span>
         </>
       )}

@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Flashcard } from "@/types";
 import { useToast } from "@/hooks/use-toast";
@@ -103,6 +102,63 @@ export const useAudioPlayback = (cards: Flashcard[]) => {
       
       // Start speaking Arabic
       window.speechSynthesis.speak(utterance);
+    });
+  };
+
+  // Function to speak a German word followed by its Arabic translation
+  const speakVocabPair = (germanText: string, arabicText: string, cardId: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      if (!isSpeechSupported) {
+        console.error("Speech synthesis not supported");
+        reject(new Error("Speech synthesis not supported"));
+        return;
+      }
+      
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
+      
+      console.log("Speaking vocab pair:", germanText, arabicText);
+      setSpeakingWordId(cardId);
+      
+      // Create utterance for German word
+      const utteranceGerman = new SpeechSynthesisUtterance(germanText);
+      utteranceGerman.lang = 'de-DE';
+      utteranceGerman.volume = 1.0;
+      
+      // Create utterance for Arabic translation
+      const utteranceArabic = new SpeechSynthesisUtterance(arabicText);
+      utteranceArabic.lang = 'ar-SA';
+      utteranceArabic.rate = 0.7; // Slower rate for better Arabic pronunciation
+      utteranceArabic.pitch = 1.0;
+      utteranceArabic.volume = 1.0;
+      
+      // Add event listener for when German speaking ends
+      utteranceGerman.onend = () => {
+        // Add a short pause before speaking Arabic
+        setTimeout(() => {
+          window.speechSynthesis.speak(utteranceArabic);
+        }, 500);
+      };
+      
+      // Add event listener for when Arabic speaking ends
+      utteranceArabic.onend = () => {
+        setSpeakingWordId(null);
+        resolve();
+      };
+      
+      utteranceArabic.onerror = (event) => {
+        console.error('Speech synthesis error:', event);
+        setSpeakingWordId(null);
+        toast({
+          title: "Speech Error",
+          description: "Failed to play audio. Please try again.",
+          variant: "destructive"
+        });
+        reject(new Error('Speech synthesis failed'));
+      };
+      
+      // Start speaking German first
+      window.speechSynthesis.speak(utteranceGerman);
     });
   };
 
@@ -242,6 +298,7 @@ export const useAudioPlayback = (cards: Flashcard[]) => {
     currentCardIndex,
     speakingWordId,
     speakArabicOnly,
+    speakVocabPair, // Add this to the returned object
     togglePlayback,
     stopPlayback,
     testAudioOutput,

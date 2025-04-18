@@ -34,36 +34,8 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
     }
   };
 
-  // Function to speak only Arabic
-  const speakArabicOnly = (text: string, cardId: string) => {
-    // Stop any previous speech
-    window.speechSynthesis.cancel();
-    
-    // Set indicator for currently speaking word
-    setSpeakingWordId(cardId);
-    
-    // Create utterance for Arabic only
-    const utteranceArabic = new SpeechSynthesisUtterance(text);
-    utteranceArabic.lang = 'ar-SA';
-    utteranceArabic.rate = 0.7; // Slower rate for better Arabic pronunciation
-    utteranceArabic.pitch = 1.0;
-    utteranceArabic.volume = 1.0;
-    
-    // When speech ends
-    utteranceArabic.onend = () => {
-      setSpeakingWordId(null);
-    };
-    
-    // If there's an error
-    utteranceArabic.onerror = () => {
-      setSpeakingWordId(null);
-    };
-    
-    // Start speaking Arabic
-    window.speechSynthesis.speak(utteranceArabic);
-  };
-
-  const speakWord = (text: string, translation: string, cardId: string) => {
+  // Function to speak both German and Arabic
+  const speakBothLanguages = (text: string, translation: string, cardId: string) => {
     // Stop any previous speech
     window.speechSynthesis.cancel();
     
@@ -73,6 +45,8 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
     // Create utterance for German word
     const utteranceGerman = new SpeechSynthesisUtterance(text);
     utteranceGerman.lang = 'de-DE';
+    utteranceGerman.volume = 1.0;
+    utteranceGerman.rate = 0.9;
     
     // Create utterance for Arabic translation
     const utteranceArabic = new SpeechSynthesisUtterance(translation);
@@ -83,8 +57,11 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
     
     // Add event listener for when German speaking ends
     utteranceGerman.onend = () => {
-      // Speak the Arabic translation after German is done
-      window.speechSynthesis.speak(utteranceArabic);
+      // Short pause before speaking Arabic
+      setTimeout(() => {
+        // Speak the Arabic translation after German is done
+        window.speechSynthesis.speak(utteranceArabic);
+      }, 500);
     };
     
     // Add event listener for when Arabic speaking ends
@@ -93,6 +70,12 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
       if (!isPlayingAll) {
         setSpeakingWordId(null);
       }
+    };
+    
+    // Error handling
+    utteranceGerman.onerror = utteranceArabic.onerror = () => {
+      setSpeakingWordId(null);
+      console.error("Speech synthesis error");
     };
     
     // Start speaking German first
@@ -137,10 +120,10 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
   // Effect to manage the auto-play sequence
   useEffect(() => {
     if (isPlayingAll && deckCards.length > 0) {
-      // Speak only the Arabic translation
+      // Speak both German and Arabic
       const currentCard = deckCards[currentPlayIndex];
       if (currentCard) {
-        speakArabicOnly(currentCard.back, currentCard.id);
+        speakBothLanguages(currentCard.front, currentCard.back, currentCard.id);
         
         // Set up the next word with a delay
         timeoutRef.current = window.setTimeout(() => {
@@ -151,7 +134,7 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
             // We've reached the end of the list
             stopAutoPlay();
           }
-        }, 3000); // 3 second delay for Arabic only
+        }, 4000); // 4 second delay to account for both languages
       }
     }
     
@@ -180,8 +163,8 @@ const DeckItem: React.FC<DeckItemProps> = ({ deck }) => {
       window.speechSynthesis.cancel();
       setSpeakingWordId(null);
     } else {
-      // Otherwise speak only the Arabic translation
-      speakArabicOnly(translation, cardId);
+      // Speak both German and Arabic
+      speakBothLanguages(text, translation, cardId);
     }
   };
 

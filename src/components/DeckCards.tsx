@@ -17,7 +17,8 @@ const DeckCards: React.FC<DeckCardsProps> = ({ cards, deckId }) => {
   const { 
     isPlaying, 
     speakingWordId, 
-    speakArabicOnly, // Use speakArabicOnly instead of speakVocabPair
+    speakArabicOnly,
+    speakBothLanguages,
     togglePlayback, 
     currentCardIndex 
   } = useAudioPlayback(cards);
@@ -75,7 +76,7 @@ const DeckCards: React.FC<DeckCardsProps> = ({ cards, deckId }) => {
                     variant="ghost" 
                     size="sm"
                     className={`p-1 ${speakingWordId === card.id ? 'text-blue-500' : 'text-gray-500'}`}
-                    onClick={() => speakArabicOnly(card.back, card.id)} // Use speakArabicOnly here
+                    onClick={() => speakBothLanguages(card.front, card.back, card.id)} 
                     disabled={isPlaying}
                   >
                     <Volume2 size={16} />

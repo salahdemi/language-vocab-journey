@@ -26,7 +26,7 @@ const PlayAllButton: React.FC<PlayAllButtonProps> = ({ cards, isPlaying, onPlayT
       ) : (
         <>
           <Volume2 size={18} />
-          <span>Play All Arabic</span>
+          <span>Play All Words</span>
         </>
       )}
     </Button>

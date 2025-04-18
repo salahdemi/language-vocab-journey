@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Flashcard } from "@/types";
 import { useToast } from "@/hooks/use-toast";
@@ -112,23 +113,63 @@ export const useAudioPlayback = (cards: Flashcard[]) => {
     }
 
     try {
+      console.log("Speaking both languages - German:", germanText, "Arabic:", arabicText);
+      
+      // Cancel any previous speech
+      window.speechSynthesis.cancel();
+      
+      // Set the speaking word ID
+      setSpeakingWordId(cardId);
+      
       // First speak German
       const germanUtterance = new SpeechSynthesisUtterance(germanText);
       germanUtterance.lang = 'de-DE';
       germanUtterance.volume = 1.0;
+      germanUtterance.rate = 0.9;
 
       await new Promise<void>((resolve) => {
-        germanUtterance.onend = () => resolve();
+        germanUtterance.onend = () => {
+          console.log("German speech ended");
+          resolve();
+        };
+        
+        germanUtterance.onerror = () => {
+          console.error("German speech error");
+          resolve(); // Continue even if there's an error
+        };
+        
         window.speechSynthesis.speak(germanUtterance);
       });
 
       // Short pause between languages
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 800));
 
       // Then speak Arabic
-      await speakArabicOnly(arabicText, cardId);
+      const arabicUtterance = new SpeechSynthesisUtterance(arabicText);
+      arabicUtterance.lang = 'ar-SA';
+      arabicUtterance.rate = 0.7;
+      arabicUtterance.pitch = 1.0;
+      arabicUtterance.volume = 1.0;
+      
+      await new Promise<void>((resolve, reject) => {
+        arabicUtterance.onend = () => {
+          console.log("Arabic speech ended");
+          setSpeakingWordId(null);
+          resolve();
+        };
+        
+        arabicUtterance.onerror = (event) => {
+          console.error("Arabic speech error:", event);
+          setSpeakingWordId(null);
+          reject(new Error('Arabic speech failed'));
+        };
+        
+        window.speechSynthesis.speak(arabicUtterance);
+      });
+      
     } catch (error) {
       console.error('Error in speech synthesis:', error);
+      setSpeakingWordId(null);
       toast({
         title: "Speech Error",
         description: "Failed to play audio. Please try again.",
@@ -168,7 +209,7 @@ export const useAudioPlayback = (cards: Flashcard[]) => {
       return;
     }
     
-    console.log("Starting playback");
+    console.log("Starting playback with", cards.length, "cards");
     setIsPlaying(true);
     setCurrentCardIndex(0);
   };
@@ -206,6 +247,7 @@ export const useAudioPlayback = (cards: Flashcard[]) => {
         if (currentCard) {
           console.log("Playing card:", currentCard.front, currentCard.back);
           try {
+            // Use speakBothLanguages instead of speakArabicOnly for 'Play All'
             await speakBothLanguages(currentCard.front, currentCard.back, currentCard.id);
             
             // Move to next card with a delay
@@ -221,6 +263,13 @@ export const useAudioPlayback = (cards: Flashcard[]) => {
       
       playNextCard();
     }
+    
+    // Cleanup function
+    return () => {
+      if (timeoutRef.current !== null) {
+        window.clearTimeout(timeoutRef.current);
+      }
+    };
   }, [isPlaying, currentCardIndex, cards]);
 
   // Function to manually test audio
@@ -234,37 +283,20 @@ export const useAudioPlayback = (cards: Flashcard[]) => {
       return;
     }
     
-    console.log("Testing speech synthesis with 'مرحبا' (Hello in Arabic)");
+    console.log("Testing speech synthesis with German 'sehen' and Arabic 'يرى'");
     
     // Cancel any ongoing speech
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
     
-    // Try to speak Arabic test word
-    const utterance = new SpeechSynthesisUtterance("مرحبا");
-    utterance.lang = 'ar-SA';
-    utterance.volume = 1.0;
-    utterance.rate = 0.7;
+    // Trigger the test with both German and Arabic
+    speakBothLanguages("sehen", "يرى", "test-audio");
     
-    utterance.onend = () => {
-      console.log("Test speech completed successfully");
-      toast({
-        title: "Test completed",
-        description: "If you didn't hear anything, check your volume settings.",
-      });
-    };
-    
-    utterance.onerror = (event) => {
-      console.error("Test speech error:", event);
-      toast({
-        title: "Test failed",
-        description: "Speech synthesis error. Check browser permissions.",
-        variant: "destructive"
-      });
-    };
-    
-    window.speechSynthesis.speak(utterance);
+    toast({
+      title: "Test in progress",
+      description: "Testing audio with 'sehen' and 'يرى'. If you don't hear anything, check your volume settings.",
+    });
   };
 
   return {

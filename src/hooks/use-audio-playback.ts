@@ -72,17 +72,17 @@ export const useAudioPlayback = (cards: Flashcard[]) => {
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
       
-      console.log("Speaking Arabic only:", text);
+      console.log("Speaking Arabic:", text);
       setSpeakingWordId(cardId);
       
-      // Create utterance for Arabic only
+      // Create utterance for Arabic
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'ar-SA';
-      utterance.rate = 0.7; // Slower rate for better Arabic pronunciation
+      utterance.rate = 0.7; // Slower rate for better pronunciation
       utterance.pitch = 1.0;
-      utterance.volume = 1.0; // Ensure volume is at maximum
+      utterance.volume = 1.0;
       
-      // Add event listener for when speaking ends or errors
+      // Add event listeners
       utterance.onend = () => {
         console.log("Arabic speech ended");
         setSpeakingWordId(null);
@@ -92,11 +92,6 @@ export const useAudioPlayback = (cards: Flashcard[]) => {
       utterance.onerror = (event) => {
         console.error('Speech synthesis error:', event);
         setSpeakingWordId(null);
-        toast({
-          title: "Speech Error",
-          description: "Failed to play audio. Please try again.",
-          variant: "destructive"
-        });
         reject(new Error('Speech synthesis failed'));
       };
       
@@ -105,61 +100,41 @@ export const useAudioPlayback = (cards: Flashcard[]) => {
     });
   };
 
-  // Function to speak a German word followed by its Arabic translation
-  const speakVocabPair = (germanText: string, arabicText: string, cardId: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      if (!isSpeechSupported) {
-        console.error("Speech synthesis not supported");
-        reject(new Error("Speech synthesis not supported"));
-        return;
-      }
-      
-      // Cancel any ongoing speech
-      window.speechSynthesis.cancel();
-      
-      console.log("Speaking vocab pair:", germanText, arabicText);
-      setSpeakingWordId(cardId);
-      
-      // Create utterance for German word
-      const utteranceGerman = new SpeechSynthesisUtterance(germanText);
-      utteranceGerman.lang = 'de-DE';
-      utteranceGerman.volume = 1.0;
-      
-      // Create utterance for Arabic translation
-      const utteranceArabic = new SpeechSynthesisUtterance(arabicText);
-      utteranceArabic.lang = 'ar-SA';
-      utteranceArabic.rate = 0.7; // Slower rate for better Arabic pronunciation
-      utteranceArabic.pitch = 1.0;
-      utteranceArabic.volume = 1.0;
-      
-      // Add event listener for when German speaking ends
-      utteranceGerman.onend = () => {
-        // Add a short pause before speaking Arabic
-        setTimeout(() => {
-          window.speechSynthesis.speak(utteranceArabic);
-        }, 500);
-      };
-      
-      // Add event listener for when Arabic speaking ends
-      utteranceArabic.onend = () => {
-        setSpeakingWordId(null);
-        resolve();
-      };
-      
-      utteranceArabic.onerror = (event) => {
-        console.error('Speech synthesis error:', event);
-        setSpeakingWordId(null);
-        toast({
-          title: "Speech Error",
-          description: "Failed to play audio. Please try again.",
-          variant: "destructive"
-        });
-        reject(new Error('Speech synthesis failed'));
-      };
-      
-      // Start speaking German first
-      window.speechSynthesis.speak(utteranceGerman);
-    });
+  // Function to speak both German and Arabic
+  const speakBothLanguages = async (germanText: string, arabicText: string, cardId: string): Promise<void> => {
+    if (!isSpeechSupported) {
+      toast({
+        title: "Speech not supported",
+        description: "Your browser doesn't support text-to-speech features.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // First speak German
+      const germanUtterance = new SpeechSynthesisUtterance(germanText);
+      germanUtterance.lang = 'de-DE';
+      germanUtterance.volume = 1.0;
+
+      await new Promise<void>((resolve) => {
+        germanUtterance.onend = () => resolve();
+        window.speechSynthesis.speak(germanUtterance);
+      });
+
+      // Short pause between languages
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Then speak Arabic
+      await speakArabicOnly(arabicText, cardId);
+    } catch (error) {
+      console.error('Error in speech synthesis:', error);
+      toast({
+        title: "Speech Error",
+        description: "Failed to play audio. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   // Toggle play/pause for sequence playback
@@ -231,15 +206,14 @@ export const useAudioPlayback = (cards: Flashcard[]) => {
         if (currentCard) {
           console.log("Playing card:", currentCard.front, currentCard.back);
           try {
-            await speakArabicOnly(currentCard.back, currentCard.id);
+            await speakBothLanguages(currentCard.front, currentCard.back, currentCard.id);
             
             // Move to next card with a delay
-            console.log("Successfully played card, moving to next after delay");
             timeoutRef.current = window.setTimeout(() => {
               setCurrentCardIndex(prev => prev + 1);
-            }, 1500); // 1.5 second pause between card pairs
+            }, 1500);
           } catch (error) {
-            console.log("Failed to play card, stopping playback");
+            console.error("Failed to play card:", error);
             stopPlayback();
           }
         }
@@ -298,7 +272,7 @@ export const useAudioPlayback = (cards: Flashcard[]) => {
     currentCardIndex,
     speakingWordId,
     speakArabicOnly,
-    speakVocabPair, // Add this to the returned object
+    speakBothLanguages,
     togglePlayback,
     stopPlayback,
     testAudioOutput,

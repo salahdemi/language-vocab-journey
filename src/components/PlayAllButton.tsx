@@ -1,34 +1,23 @@
 
 import React from "react";
-import { Play, Pause, Volume2 } from "lucide-react";
+import { Play, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Flashcard } from "@/types";
 
 interface PlayAllButtonProps {
   cards: Flashcard[];
-  isPlaying: boolean;
-  onPlayToggle: () => void;
+  onStudyAll: () => void;
 }
 
-const PlayAllButton: React.FC<PlayAllButtonProps> = ({ cards, isPlaying, onPlayToggle }) => {
+const PlayAllButton: React.FC<PlayAllButtonProps> = ({ cards, onStudyAll }) => {
   return (
     <Button 
-      onClick={onPlayToggle}
-      variant={isPlaying ? "destructive" : "default"}
-      className="flex items-center gap-2"
+      onClick={onStudyAll}
+      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:shadow-lg transition-all"
       disabled={cards.length === 0}
     >
-      {isPlaying ? (
-        <>
-          <Pause size={18} />
-          <span>Stop Audio</span>
-        </>
-      ) : (
-        <>
-          <Volume2 size={18} />
-          <span>Play All Words</span>
-        </>
-      )}
+      <BookOpen size={18} />
+      <span>Study All Cards ({cards.length})</span>
     </Button>
   );
 };

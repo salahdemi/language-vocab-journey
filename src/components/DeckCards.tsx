@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Flashcard } from "@/types";
-import { MoreVertical, Upload, Plus } from "lucide-react";
+import { MoreVertical, Upload, Plus, BookOpen } from "lucide-react";
 import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
 import ImportCardsDialog from "./ImportCardsDialog";
 import PlayAllButton from "./PlayAllButton";

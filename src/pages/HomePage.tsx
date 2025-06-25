@@ -4,7 +4,7 @@ import { useVocab } from "@/context/VocabContext";
 import DeckItem from "@/components/DeckItem";
 import Navbar from "@/components/Navbar";
 import AddDeckButton from "@/components/AddDeckButton";
-import { Crown, Edit } from "lucide-react";
+import { Edit } from "lucide-react";
 
 const HomePage: React.FC = () => {
   const { decks } = useVocab();
@@ -18,10 +18,6 @@ const HomePage: React.FC = () => {
             <span className="text-gray-600">0</span>
           </div>
         </div>
-        <button className="bg-app-premium text-white px-4 py-2 rounded-full flex items-center">
-          <Crown className="mr-2" size={18} />
-          <span>Get Premium</span>
-        </button>
         <button>
           <Edit size={24} />
         </button>
